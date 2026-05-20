@@ -136,6 +136,48 @@ async def test_station_direction_groups_returns_selectable_groups() -> None:
     assert groups[0].schedule_codes == ("H", "I")
 
 
+async def test_station_direction_options_returns_config_options() -> None:
+    transport = FakeTransport(
+        (
+            {
+                "id": "de:09162:410",
+                "name": "Bonner Platz",
+                "place": "München",
+                "divaId": 410,
+                "abbreviation": "BP",
+                "tariffZones": "m",
+                "products": ["UBAHN"],
+                "latitude": 48.166878,
+                "longitude": 11.579666,
+            },
+            [
+                {
+                    "uri": "https://www.mvg.de/aushangfahrplan/U3_R_BP_51.pdf",
+                    "scheduleKind": "SUBWAY",
+                    "scheduleName": "U3",
+                    "direction": "Moosach Bf, gültig ab 14.12.2025",
+                },
+                {
+                    "uri": "https://www.mvg.de/aushangfahrplan/U3_S_BP_51.pdf",
+                    "scheduleKind": "SUBWAY",
+                    "scheduleName": "U3",
+                    "direction": (
+                        "Implerstraße / Moosach Bf "
+                        "(gültig vom 18.05. - 18.09.2026)"
+                    ),
+                },
+            ],
+        )
+    )
+    client = MunichTransportClient(transport)
+
+    options = await client.station_direction_options("de:09162:410")
+
+    assert len(options) == 1
+    assert options[0].id == "SUBWAY:U3:R"
+    assert options[0].label == "U3 Richtung Moosach Bf / Implerstraße / Moosach Bf"
+
+
 async def test_routes_formats_datetime_as_utc_browser_parameter() -> None:
     transport = FakeTransport([])
     client = MunichTransportClient(transport)

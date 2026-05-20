@@ -12,7 +12,10 @@ from collections.abc import Iterable, Sequence
 
 from munich_transport import AiohttpTransport, MunichTransportClient
 from munich_transport.models import Location
-from munich_transport.schedules import group_station_schedules
+from munich_transport.schedules import (
+    build_station_direction_options,
+    group_station_schedules,
+)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -83,6 +86,11 @@ async def _run(
             f"[direction_key={group.direction_key or '-'} codes={codes}] "
             f"-> {directions}"
         )
+
+    print()
+    print("integration options:")
+    for option in build_station_direction_options(schedules):
+        print(f"- {option.id}: {option.label}")
 
     print()
     print(f"served line labels: {', '.join(_unique(line.label for line in lines))}")

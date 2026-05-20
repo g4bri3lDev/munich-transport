@@ -41,7 +41,7 @@ are normalized so `H` and `I` share direction key `H`, while `R` and `S` share
 direction key `R`.
 
 Use `MunichTransportClient.station_direction_groups(global_id)` to build
-user-selectable line/direction options:
+rich user-selectable line/direction groups:
 
 ```python
 groups = await client.station_direction_groups("de:09162:410")
@@ -49,11 +49,20 @@ for group in groups:
     print(group.line_label, group.direction_key, group.directions)
 ```
 
+For integration config flows, `station_direction_options()` returns a compact
+shape with a stable `id` and concise label:
+
+```python
+options = await client.station_direction_options("de:09162:410")
+for option in options:
+    print(option.id, option.label)
+```
+
 For Bonner Platz this produces two U3 options:
 
 ```text
-U3 H: Fürstenried West / Sendlinger Tor / Fürstenried West
-U3 R: Moosach Bf / Implerstraße / Moosach Bf
+SUBWAY:U3:H  U3 Richtung Fürstenried West / Sendlinger Tor / Fürstenried West
+SUBWAY:U3:R  U3 Richtung Moosach Bf / Implerstraße / Moosach Bf
 ```
 
 At runtime, fetch live departures and match the stored selector against
@@ -61,15 +70,14 @@ At runtime, fetch live departures and match the stored selector against
 also exposed as `Departure.line_id`.
 
 ```python
-selected_line = "U3"
-selected_direction_key = "H"
+selected = options[0]
 
 departures = await client.departures("de:09162:410")
 matching = [
     departure
     for departure in departures
-    if departure.line.label == selected_line
-    and departure.direction_key == selected_direction_key
+    if departure.line.label == selected.line_label
+    and departure.direction_key == selected.direction_key
 ]
 ```
 

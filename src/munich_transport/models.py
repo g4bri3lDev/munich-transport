@@ -68,6 +68,20 @@ class StationDirection:
 
 
 @dataclass(frozen=True, slots=True)
+class StationDirectionOption:
+    """Compact config-flow option for a station line/direction group."""
+
+    id: str
+    label: str
+    schedule_kind: str
+    line_label: str
+    direction_key: str | None
+    directions: tuple[str, ...]
+    raw_directions: tuple[str, ...]
+    schedule_codes: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class Line:
     """A transit line."""
 

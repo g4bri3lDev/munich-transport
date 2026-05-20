@@ -14,6 +14,7 @@ from .models import (
     Route,
     Station,
     StationDirection,
+    StationDirectionOption,
     StationSchedule,
 )
 from .parser import (
@@ -26,7 +27,7 @@ from .parser import (
     parse_station,
     parse_station_schedules,
 )
-from .schedules import group_station_schedules
+from .schedules import build_station_direction_options, group_station_schedules
 from .transport import AiohttpTransport, Transport
 from .types import DEFAULT_DEPARTURE_TRANSPORT_TYPES, DEFAULT_TRANSPORT_TYPES
 
@@ -65,6 +66,13 @@ class MunichTransportClient:
     async def station_direction_groups(self, global_id: str) -> list[StationDirection]:
         schedules = await self.station_schedules(global_id)
         return group_station_schedules(schedules)
+
+    async def station_direction_options(
+        self,
+        global_id: str,
+    ) -> list[StationDirectionOption]:
+        schedules = await self.station_schedules(global_id)
+        return build_station_direction_options(schedules)
 
     async def nearby_stations(self, latitude: float, longitude: float) -> list[Station]:
         payload = await self._transport.get_json(

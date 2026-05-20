@@ -93,6 +93,16 @@ async def test_station_schedules_resolves_abbreviation_before_aushang() -> None:
     ]
 
 
+async def test_station_schedules_by_abbreviation_uses_aushang_directly() -> None:
+    transport = FakeTransport([])
+    client = MunichTransportClient(transport)
+
+    assert await client.station_schedules_by_abbreviation("BP") == []
+    assert transport.calls == [
+        ("/.rest/aushang/stations", {"id": "BP"}),
+    ]
+
+
 async def test_station_direction_groups_returns_selectable_groups() -> None:
     transport = FakeTransport(
         (
@@ -175,7 +185,28 @@ async def test_station_direction_options_returns_config_options() -> None:
 
     assert len(options) == 1
     assert options[0].id == "SUBWAY:U3:R"
-    assert options[0].label == "U3 Richtung Moosach Bf / Implerstraße / Moosach Bf"
+    assert options[0].directions == ("Moosach Bf", "Implerstraße / Moosach Bf")
+
+
+async def test_direction_options_by_abbreviation_avoids_station_lookup() -> None:
+    transport = FakeTransport(
+        [
+            {
+                "uri": "https://www.mvg.de/aushangfahrplan/U3_R_BP_51.pdf",
+                "scheduleKind": "SUBWAY",
+                "scheduleName": "U3",
+                "direction": "Moosach Bf, gültig ab 14.12.2025",
+            },
+        ]
+    )
+    client = MunichTransportClient(transport)
+
+    options = await client.station_direction_options_by_abbreviation("BP")
+
+    assert options[0].id == "SUBWAY:U3:R"
+    assert transport.calls == [
+        ("/.rest/aushang/stations", {"id": "BP"}),
+    ]
 
 
 async def test_routes_formats_datetime_as_utc_browser_parameter() -> None:

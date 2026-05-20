@@ -1,10 +1,20 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from munich_transport.models import StationSchedule
+from munich_transport.parser import parse_station_schedules
 from munich_transport.schedules import (
     build_station_direction_options,
     group_station_schedules,
 )
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def load_fixture(name: str) -> object:
+    return json.loads((FIXTURES / name).read_text())
 
 
 def test_group_station_schedules_combines_temporary_variants() -> None:
@@ -77,12 +87,23 @@ def test_group_station_schedules_can_include_non_service_entries() -> None:
             stop_number="0",
             direction_key="H",
         ),
+        StationSchedule(
+            schedule_kind="STATION_OVERVIEW_MAP",
+            line_label="P7",
+            direction="Haltestellen-Übersichtsplan Bus/Tram",
+            pdf_url="https://www.mvg.de/aushangfahrplan/P7_H_SE_0.pdf",
+            schedule_code="H",
+            station_abbreviation="SE",
+            stop_number="0",
+            direction_key="H",
+        ),
     ]
+
+    assert group_station_schedules(schedules) == []
 
     groups = group_station_schedules(schedules, include_non_service=True)
 
-    assert len(groups) == 1
-    assert groups[0].line_label == "P8"
+    assert [group.line_label for group in groups] == ["P8", "P7"]
 
 
 def test_build_station_direction_options_returns_config_shape() -> None:
@@ -123,9 +144,6 @@ def test_build_station_direction_options_returns_config_shape() -> None:
 
     assert len(options) == 1
     assert options[0].id == "SUBWAY:U3:H"
-    assert options[0].label == (
-        "U3 Richtung Fürstenried West / Sendlinger Tor / Fürstenried West"
-    )
     assert options[0].line_label == "U3"
     assert options[0].direction_key == "H"
     assert options[0].directions == (
@@ -136,3 +154,64 @@ def test_build_station_direction_options_returns_config_shape() -> None:
         "Fürstenried West, gültig ab 14.12.2025",
         "Sendlinger Tor / Fürstenried West (gültig vom 18.05.)",
     )
+
+
+def test_bonner_platz_characterization_groups_temporary_u3_termini() -> None:
+    schedules = parse_station_schedules(
+        load_fixture("station_schedules_bonner_platz.json")
+    )
+
+    options = build_station_direction_options(schedules)
+
+    assert [option.id for option in options] == ["SUBWAY:U3:H", "SUBWAY:U3:R"]
+    assert options[0].schedule_codes == ("H", "I")
+    assert options[0].directions == (
+        "Fürstenried West",
+        "Sendlinger Tor / Fürstenried West",
+    )
+    assert options[1].schedule_codes == ("R", "S")
+    assert options[1].directions == ("Moosach Bf", "Implerstraße / Moosach Bf")
+
+
+def test_sendlinger_tor_characterization_keeps_night_line_options() -> None:
+    schedules = parse_station_schedules(
+        load_fixture("station_schedules_sendlinger_tor_night.json")
+    )
+
+    options = build_station_direction_options(schedules)
+
+    assert [option.id for option in options] == [
+        "NIGHT_LINE:N17:H",
+        "NIGHT_LINE:N17:R",
+        "NIGHT_LINE:N41:H",
+        "NIGHT_LINE:N41:R",
+    ]
+    assert options[2].directions == ("Fürstenried West",)
+    assert options[2].raw_directions == (
+        "Fürstenried West, nicht gültig vom 18.05. - 18.09.2026",
+        "Fürstenried West, gültig vom 18.05. - 18.09.2026",
+    )
+
+
+def test_machtlfinger_characterization_has_bus_and_subway_but_no_night_lines() -> None:
+    schedules = parse_station_schedules(
+        load_fixture("station_schedules_machtlfinger_strasse.json")
+    )
+
+    options = build_station_direction_options(schedules)
+
+    assert [option.id for option in options] == [
+        "BUS:51:H",
+        "BUS:51:R",
+        "SUBWAY:U3:H",
+        "SUBWAY:U3:R",
+    ]
+    assert all(option.schedule_kind != "NIGHT_LINE" for option in options)
+
+
+def test_marienplatz_characterization_schedule_catalog_has_no_s_bahn() -> None:
+    schedules = parse_station_schedules(
+        load_fixture("station_schedules_marienplatz.json")
+    )
+
+    assert not any(schedule.line_label.startswith("S") for schedule in schedules)

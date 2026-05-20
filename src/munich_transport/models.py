@@ -72,7 +72,6 @@ class StationDirectionOption:
     """Compact config-flow option for a station line/direction group."""
 
     id: str
-    label: str
     schedule_kind: str
     line_label: str
     direction_key: str | None

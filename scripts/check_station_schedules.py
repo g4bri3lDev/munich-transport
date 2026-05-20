@@ -90,7 +90,7 @@ async def _run(
     print()
     print("integration options:")
     for option in build_station_direction_options(schedules):
-        print(f"- {option.id}: {option.label}")
+        print(f"- {option.id}: {_format_option(option.line_label, option.directions)}")
 
     print()
     print(f"served line labels: {', '.join(_unique(line.label for line in lines))}")
@@ -127,6 +127,10 @@ def _print_resolved_location(location: Location) -> None:
 
 def _unique(values: Iterable[str]) -> list[str]:
     return list(dict.fromkeys(values))
+
+
+def _format_option(line_label: str, directions: tuple[str, ...]) -> str:
+    return f"{line_label} -> {' / '.join(directions)}"
 
 
 if __name__ == "__main__":

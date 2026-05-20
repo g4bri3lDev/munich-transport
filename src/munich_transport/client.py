@@ -57,9 +57,15 @@ class MunichTransportClient:
         if station.abbreviation is None:
             raise ParseError("Station response did not include an abbreviation")
 
+        return await self.station_schedules_by_abbreviation(station.abbreviation)
+
+    async def station_schedules_by_abbreviation(
+        self,
+        abbreviation: str,
+    ) -> list[StationSchedule]:
         payload = await self._transport.get_json(
             "/.rest/aushang/stations",
-            params={"id": station.abbreviation},
+            params={"id": abbreviation},
         )
         return parse_station_schedules(payload)
 
@@ -67,11 +73,25 @@ class MunichTransportClient:
         schedules = await self.station_schedules(global_id)
         return group_station_schedules(schedules)
 
+    async def station_direction_groups_by_abbreviation(
+        self,
+        abbreviation: str,
+    ) -> list[StationDirection]:
+        schedules = await self.station_schedules_by_abbreviation(abbreviation)
+        return group_station_schedules(schedules)
+
     async def station_direction_options(
         self,
         global_id: str,
     ) -> list[StationDirectionOption]:
         schedules = await self.station_schedules(global_id)
+        return build_station_direction_options(schedules)
+
+    async def station_direction_options_by_abbreviation(
+        self,
+        abbreviation: str,
+    ) -> list[StationDirectionOption]:
+        schedules = await self.station_schedules_by_abbreviation(abbreviation)
         return build_station_direction_options(schedules)
 
     async def nearby_stations(self, latitude: float, longitude: float) -> list[Station]:

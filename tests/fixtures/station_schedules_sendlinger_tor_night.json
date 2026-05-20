@@ -1,0 +1,44 @@
+[
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/P7_H_SE_0.pdf",
+    "scheduleKind": "STATION_OVERVIEW_MAP",
+    "scheduleName": "P7",
+    "direction": "Haltestellen-Übersichtsplan Bus/Tram"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/N17_H_SE_3.pdf",
+    "scheduleKind": "NIGHT_LINE",
+    "scheduleName": "N17",
+    "direction": "Effnerplatz"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/N17_R_SE_4.pdf",
+    "scheduleKind": "NIGHT_LINE",
+    "scheduleName": "N17",
+    "direction": "Amalienburgstraße"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/N41_H_SE_3.pdf",
+    "scheduleKind": "NIGHT_LINE",
+    "scheduleName": "N41",
+    "direction": "Fürstenried West, nicht gültig vom 18.05. - 18.09.2026"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/N41_I_SE_3.pdf",
+    "scheduleKind": "NIGHT_LINE",
+    "scheduleName": "N41",
+    "direction": "Fürstenried West, gültig vom 18.05. - 18.09.2026"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/N41_R_SE_4.pdf",
+    "scheduleKind": "NIGHT_LINE",
+    "scheduleName": "N41",
+    "direction": "Feldmoching Bf., nicht gültig vom 18.05. - 18.09.2026"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/N41_S_SE_4.pdf",
+    "scheduleKind": "NIGHT_LINE",
+    "scheduleName": "N41",
+    "direction": "Feldmoching Bf., gültig vom 18.05. - 18.09.2026"
+  }
+]

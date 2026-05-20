@@ -5,11 +5,19 @@ Async Python client for Munich public transport data.
 This package is intentionally independent from Home Assistant. A Home Assistant
 integration can later use it as a thin adapter.
 
+This project is not affiliated with, endorsed by, or sponsored by MVG, MVV, or
+Stadtwerke München.
+
 ## Endpoint Source
 
 The endpoint shapes in this package are based on network traffic captured from
 the official MVG website with Chrome DevTools MCP. External client
 implementations and the legacy integration are not used as references.
+
+See [docs/endpoint-discovery.md](docs/endpoint-discovery.md) for the captured
+browser calls and
+[docs/home-assistant-request-strategy.md](docs/home-assistant-request-strategy.md)
+for Home Assistant request sharing and backoff guidance.
 
 ## Station Schedule Catalog
 
@@ -50,19 +58,30 @@ for group in groups:
 ```
 
 For integration config flows, `station_direction_options()` returns a compact
-shape with a stable `id` and concise label:
+shape with a stable `id` and cleaned direction strings. It intentionally does
+not format UI text; adapters such as Home Assistant should localize and render
+labels themselves.
 
 ```python
 options = await client.station_direction_options("de:09162:410")
 for option in options:
-    print(option.id, option.label)
+    label = f"{option.line_label} -> {' / '.join(option.directions)}"
+    print(option.id, label)
 ```
 
 For Bonner Platz this produces two U3 options:
 
 ```text
-SUBWAY:U3:H  U3 Richtung Fürstenried West / Sendlinger Tor / Fürstenried West
-SUBWAY:U3:R  U3 Richtung Moosach Bf / Implerstraße / Moosach Bf
+SUBWAY:U3:H  U3 -> Fürstenried West / Sendlinger Tor / Fürstenried West
+SUBWAY:U3:R  U3 -> Moosach Bf / Implerstraße / Moosach Bf
+```
+
+If the integration already has a station abbreviation from `Station.abbreviation`,
+it can avoid a station metadata request:
+
+```python
+options = await client.station_direction_options_by_abbreviation("BP")
+schedules = await client.station_schedules_by_abbreviation("BP")
 ```
 
 At runtime, fetch live departures and match the stored selector against

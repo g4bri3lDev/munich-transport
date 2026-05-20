@@ -1,0 +1,44 @@
+[
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/51_H_MR_1.pdf",
+    "scheduleKind": "BUS",
+    "scheduleName": "51",
+    "direction": "Aidenbachstraße"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/51_R_MR_2.pdf",
+    "scheduleKind": "BUS",
+    "scheduleName": "51",
+    "direction": "Moosach Bf."
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/P8_H_MR_0.pdf",
+    "scheduleKind": "CONTEXT_MAP",
+    "scheduleName": "P8",
+    "direction": "Umgebungsplan U-Bahn"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/U3_H_MR_52.pdf",
+    "scheduleKind": "SUBWAY",
+    "scheduleName": "U3",
+    "direction": "Fürstenried West, gültig ab 14.12.2025"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/U3_I_MR_52.pdf",
+    "scheduleKind": "SUBWAY",
+    "scheduleName": "U3",
+    "direction": "Sendlinger Tor / Fürstenried West (gültig vom 18.05. - 18.09.2026)"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/U3_R_MR_51.pdf",
+    "scheduleKind": "SUBWAY",
+    "scheduleName": "U3",
+    "direction": "Moosach Bf, gültig ab 14.12.2025"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/U3_S_MR_51.pdf",
+    "scheduleKind": "SUBWAY",
+    "scheduleName": "U3",
+    "direction": "Implerstraße / Moosach Bf (gültig vom 18.05. - 18.09.2026)"
+  }
+]

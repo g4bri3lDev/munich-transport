@@ -11,6 +11,7 @@ from .models import StationDirection, StationDirectionOption, StationSchedule
 NON_SERVICE_SCHEDULE_KINDS: frozenset[str] = frozenset(
     {
         "CONTEXT_MAP",
+        "STATION_OVERVIEW_MAP",
     }
 )
 
@@ -84,11 +85,9 @@ def _build_direction_option(group: StationDirection) -> StationDirectionOption:
     directions = _unique(
         _display_direction(direction) for direction in group.directions
     )
-    label = f"{group.line_label} Richtung {' / '.join(directions)}"
 
     return StationDirectionOption(
         id=_direction_option_id(group),
-        label=label,
         schedule_kind=group.schedule_kind,
         line_label=group.line_label,
         direction_key=group.direction_key,

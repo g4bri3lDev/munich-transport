@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import aiohttp
 import pytest
+from multidict import CIMultiDict
 
 from munich_transport.exceptions import ApiError, TransportError
 from munich_transport.transport import AiohttpTransport
@@ -14,9 +15,11 @@ class FakeResponse:
         payload: object,
         reason: str = "OK",
         json_error: Exception | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         self.status = status
         self.reason = reason
+        self.headers = CIMultiDict(headers or {})
         self._payload = payload
         self._json_error = json_error
 
@@ -88,6 +91,71 @@ async def test_aiohttp_transport_raises_api_error_for_non_success() -> None:
         await transport.get_json("/path")
 
     assert error.value.status == 503
+    assert error.value.transient is True
+    assert error.value.retry_after is None
+
+
+async def test_aiohttp_transport_preserves_numeric_retry_after() -> None:
+    session = FakeSession(
+        FakeResponse(
+            429,
+            {"error": True},
+            reason="Too Many Requests",
+            headers={"Retry-After": "120"},
+        )
+    )
+    transport = AiohttpTransport(
+        base_url="https://example.test",
+        session=session,  # type: ignore[arg-type]
+    )
+
+    with pytest.raises(ApiError) as error:
+        await transport.get_json("/path")
+
+    assert error.value.status == 429
+    assert error.value.transient is True
+    assert error.value.retry_after == 120.0
+
+
+async def test_aiohttp_transport_preserves_http_date_retry_after() -> None:
+    session = FakeSession(
+        FakeResponse(
+            503,
+            {"error": True},
+            reason="Unavailable",
+            headers={"Retry-After": "Wed, 20 May 2099 11:19:37 GMT"},
+        )
+    )
+    transport = AiohttpTransport(
+        base_url="https://example.test",
+        session=session,  # type: ignore[arg-type]
+    )
+
+    with pytest.raises(ApiError) as error:
+        await transport.get_json("/path")
+
+    assert error.value.retry_after is not None
+    assert error.value.retry_after > 0
+
+
+async def test_aiohttp_transport_ignores_invalid_retry_after() -> None:
+    session = FakeSession(
+        FakeResponse(
+            503,
+            {"error": True},
+            reason="Unavailable",
+            headers={"Retry-After": "not a retry value"},
+        )
+    )
+    transport = AiohttpTransport(
+        base_url="https://example.test",
+        session=session,  # type: ignore[arg-type]
+    )
+
+    with pytest.raises(ApiError) as error:
+        await transport.get_json("/path")
+
+    assert error.value.retry_after is None
 
 
 async def test_aiohttp_transport_raises_transport_error_for_invalid_json() -> None:

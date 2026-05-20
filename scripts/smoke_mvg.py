@@ -50,6 +50,7 @@ async def _run(
         destination = _first_station(destination_query, destination_locations)
 
         station = await client.station(origin.global_id)
+        station_schedules = await client.station_schedules(origin.global_id)
         departures = await client.departures(origin.global_id, limit=departure_limit)
         lines = await client.lines(origin.global_id)
         messages = await client.messages()
@@ -68,6 +69,12 @@ async def _run(
         f"id={station.global_id} "
         f"name={station.name!r} "
         f"products={station.transport_types}"
+    )
+    print(
+        "station schedules "
+        f"count={len(station_schedules)} "
+        f"first={station_schedules[0].line_label!r} "
+        f"direction={station_schedules[0].direction!r}"
     )
     print(
         "departures "

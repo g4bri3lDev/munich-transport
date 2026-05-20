@@ -10,7 +10,10 @@ from .models import (
     Route,
     RouteLeg,
     Station,
+    StationDirection,
+    StationSchedule,
 )
+from .schedules import group_station_schedules
 from .transport import AiohttpTransport
 
 __all__ = [
@@ -26,5 +29,8 @@ __all__ = [
     "Route",
     "RouteLeg",
     "Station",
+    "StationDirection",
+    "StationSchedule",
     "TransportError",
+    "group_station_schedules",
 ]

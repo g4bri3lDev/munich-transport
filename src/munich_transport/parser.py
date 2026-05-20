@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from typing import cast
+from urllib.parse import urlsplit
 
 from .exceptions import ParseError
 from .models import (
@@ -17,6 +18,7 @@ from .models import (
     RouteLeg,
     RouteStop,
     Station,
+    StationSchedule,
 )
 
 
@@ -44,6 +46,14 @@ def parse_nearby_stations(payload: object) -> list[Station]:
     items = _as_list(payload, "nearby stations response")
     return [
         _parse_station_search_result(_as_mapping(item, "nearby station"))
+        for item in items
+    ]
+
+
+def parse_station_schedules(payload: object) -> list[StationSchedule]:
+    items = _as_list(payload, "station schedules response")
+    return [
+        _parse_station_schedule(_as_mapping(item, "station schedule"))
         for item in items
     ]
 
@@ -100,7 +110,23 @@ def _parse_station_search_result(data: Mapping[str, object]) -> Station:
     )
 
 
+def _parse_station_schedule(data: Mapping[str, object]) -> StationSchedule:
+    pdf_url = _required_str(data, "uri")
+    schedule_code, station_abbreviation, stop_number = _schedule_pdf_metadata(pdf_url)
+    return StationSchedule(
+        schedule_kind=_required_str(data, "scheduleKind"),
+        line_label=_required_str(data, "scheduleName"),
+        direction=_required_str(data, "direction"),
+        pdf_url=pdf_url,
+        schedule_code=schedule_code,
+        station_abbreviation=station_abbreviation,
+        stop_number=stop_number,
+        direction_key=_schedule_direction_key(schedule_code),
+    )
+
+
 def _parse_departure(data: Mapping[str, object]) -> Departure:
+    line_id = _optional_str(data, "lineId")
     return Departure(
         planned_departure=_unix_ms(data, "plannedDepartureTime"),
         realtime_departure=_unix_ms(data, "realtimeDepartureTime"),
@@ -110,6 +136,8 @@ def _parse_departure(data: Mapping[str, object]) -> Departure:
         cancelled=_required_bool(data, "cancelled"),
         station_global_id=_optional_str(data, "stationGlobalId"),
         stop_point_global_id=_optional_str(data, "stopPointGlobalId"),
+        line_id=line_id,
+        direction_key=_line_id_direction_key(line_id),
         platform=_optional_int(data, "platform"),
         platform_changed=_optional_bool(data, "platformChanged"),
         delay_minutes=_optional_int(data, "delayInMinutes"),
@@ -117,6 +145,35 @@ def _parse_departure(data: Mapping[str, object]) -> Departure:
         messages=_str_tuple(data.get("messages")),
         notices=_parse_notices(data.get("infos")),
     )
+
+
+def _schedule_pdf_metadata(
+    pdf_url: str,
+) -> tuple[str | None, str | None, str | None]:
+    filename = urlsplit(pdf_url).path.rsplit("/", 1)[-1]
+    if not filename.endswith(".pdf"):
+        return None, None, None
+
+    parts = filename[:-4].split("_")
+    if len(parts) < 4:
+        return None, None, None
+    return parts[1], parts[2], parts[3]
+
+
+def _schedule_direction_key(schedule_code: str | None) -> str | None:
+    if schedule_code is None:
+        return None
+    return {"I": "H", "S": "R"}.get(schedule_code, schedule_code)
+
+
+def _line_id_direction_key(line_id: str | None) -> str | None:
+    if line_id is None:
+        return None
+    parts = line_id.split(":")
+    if len(parts) < 4:
+        return None
+    direction_key = parts[3].strip()
+    return direction_key or None
 
 
 def _parse_departure_line(data: Mapping[str, object]) -> Line:

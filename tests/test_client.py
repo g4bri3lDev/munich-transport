@@ -7,8 +7,8 @@ from munich_transport.types import JsonValue
 
 
 class FakeTransport:
-    def __init__(self, payload: JsonValue) -> None:
-        self.payload = payload
+    def __init__(self, payload: JsonValue | tuple[JsonValue, ...]) -> None:
+        self.payloads = list(payload) if isinstance(payload, tuple) else [payload]
         self.calls: list[tuple[str, dict[str, str] | None]] = []
 
     async def get_json(
@@ -18,7 +18,7 @@ class FakeTransport:
         params: dict[str, str] | None = None,
     ) -> JsonValue:
         self.calls.append((path, params))
-        return self.payload
+        return self.payloads.pop(0)
 
 
 async def test_search_locations_uses_official_locations_endpoint() -> None:
@@ -52,6 +52,88 @@ async def test_departures_uses_global_id_limit_and_products() -> None:
             },
         ),
     ]
+
+
+async def test_station_schedules_resolves_abbreviation_before_aushang() -> None:
+    transport = FakeTransport(
+        (
+            {
+                "id": "de:09162:2",
+                "name": "Marienplatz",
+                "place": "München",
+                "divaId": 2,
+                "abbreviation": "MP",
+                "tariffZones": "m",
+                "products": ["SBAHN", "UBAHN", "BUS"],
+                "latitude": 48.137245,
+                "longitude": 11.575421,
+            },
+            [
+                {
+                    "uri": "https://www.mvg.de/aushangfahrplan/U3_I_MP_52.pdf",
+                    "scheduleKind": "SUBWAY",
+                    "scheduleName": "U3",
+                    "direction": (
+                        "Sendlinger Tor / Fürstenried West "
+                        "(gültig vom 18.05. - 18.09.2026)"
+                    ),
+                },
+            ],
+        )
+    )
+    client = MunichTransportClient(transport)
+
+    schedules = await client.station_schedules("de:09162:2")
+
+    assert schedules[0].line_label == "U3"
+    assert schedules[0].direction.startswith("Sendlinger Tor")
+    assert transport.calls == [
+        ("/.rest/zdm/stations/de:09162:2", None),
+        ("/.rest/aushang/stations", {"id": "MP"}),
+    ]
+
+
+async def test_station_direction_groups_returns_selectable_groups() -> None:
+    transport = FakeTransport(
+        (
+            {
+                "id": "de:09162:410",
+                "name": "Bonner Platz",
+                "place": "München",
+                "divaId": 410,
+                "abbreviation": "BP",
+                "tariffZones": "m",
+                "products": ["UBAHN"],
+                "latitude": 48.166878,
+                "longitude": 11.579666,
+            },
+            [
+                {
+                    "uri": "https://www.mvg.de/aushangfahrplan/U3_H_BP_52.pdf",
+                    "scheduleKind": "SUBWAY",
+                    "scheduleName": "U3",
+                    "direction": "Fürstenried West, gültig ab 14.12.2025",
+                },
+                {
+                    "uri": "https://www.mvg.de/aushangfahrplan/U3_I_BP_52.pdf",
+                    "scheduleKind": "SUBWAY",
+                    "scheduleName": "U3",
+                    "direction": (
+                        "Sendlinger Tor / Fürstenried West "
+                        "(gültig vom 18.05. - 18.09.2026)"
+                    ),
+                },
+            ],
+        )
+    )
+    client = MunichTransportClient(transport)
+
+    groups = await client.station_direction_groups("de:09162:410")
+
+    assert len(groups) == 1
+    assert groups[0].line_label == "U3"
+    assert groups[0].direction_key == "H"
+    assert groups[0].schedule_codes == ("H", "I")
 
 
 async def test_routes_formats_datetime_as_utc_browser_parameter() -> None:

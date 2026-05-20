@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from types import TracebackType
 from typing import Protocol, Self, cast
 
@@ -71,7 +73,14 @@ class AiohttpTransport:
             async with session.get(url, params=params, headers=headers) as response:
                 text = await response.text()
                 if response.status < 200 or response.status >= 300:
-                    raise ApiError(response.status, response.reason or "", body=text)
+                    raise ApiError(
+                        response.status,
+                        response.reason or "",
+                        body=text,
+                        retry_after=_parse_retry_after(
+                            response.headers.get("Retry-After")
+                        ),
+                    )
                 try:
                     payload = await response.json(content_type=None)
                     return cast(JsonValue, payload)
@@ -88,3 +97,29 @@ class AiohttpTransport:
         if self._session is None:
             self._session = aiohttp.ClientSession(timeout=self._timeout)
         return self._session
+
+
+def _parse_retry_after(value: str | None) -> float | None:
+    if value is None:
+        return None
+
+    stripped = value.strip()
+    if not stripped:
+        return None
+
+    try:
+        delay = float(stripped)
+    except ValueError:
+        pass
+    else:
+        return max(delay, 0.0)
+
+    try:
+        retry_at = parsedate_to_datetime(stripped)
+    except (TypeError, ValueError):
+        return None
+
+    if retry_at.tzinfo is None:
+        retry_at = retry_at.replace(tzinfo=UTC)
+    delay = retry_at.timestamp() - datetime.now(tz=UTC).timestamp()
+    return max(delay, 0.0)

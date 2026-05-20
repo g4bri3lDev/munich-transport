@@ -1,0 +1,20 @@
+[
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/U3_H_MP_52.pdf",
+    "scheduleKind": "SUBWAY",
+    "scheduleName": "U3",
+    "direction": "Fürstenried West, gültig ab 14.12.2025"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/U3_I_MP_52.pdf",
+    "scheduleKind": "SUBWAY",
+    "scheduleName": "U3",
+    "direction": "Sendlinger Tor / Fürstenried West (gültig vom 18.05. - 18.09.2026)"
+  },
+  {
+    "uri": "https://www.mvg.de/aushangfahrplan/U6_S_MP_51.pdf",
+    "scheduleKind": "SUBWAY",
+    "scheduleName": "U6",
+    "direction": "Implerstraße / Garching-Forschungszentrum (gültig vom 18.05. - 18.09.2026)"
+  }
+]

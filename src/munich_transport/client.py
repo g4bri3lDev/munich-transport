@@ -5,7 +5,17 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Literal
 
-from .models import Departure, Disruption, Line, Location, Route, Station
+from .exceptions import ParseError
+from .models import (
+    Departure,
+    Disruption,
+    Line,
+    Location,
+    Route,
+    Station,
+    StationDirection,
+    StationSchedule,
+)
 from .parser import (
     parse_departures,
     parse_disruptions,
@@ -14,7 +24,9 @@ from .parser import (
     parse_nearby_stations,
     parse_routes,
     parse_station,
+    parse_station_schedules,
 )
+from .schedules import group_station_schedules
 from .transport import AiohttpTransport, Transport
 from .types import DEFAULT_DEPARTURE_TRANSPORT_TYPES, DEFAULT_TRANSPORT_TYPES
 
@@ -38,6 +50,21 @@ class MunichTransportClient:
     async def station(self, global_id: str) -> Station:
         payload = await self._transport.get_json(f"/.rest/zdm/stations/{global_id}")
         return parse_station(payload)
+
+    async def station_schedules(self, global_id: str) -> list[StationSchedule]:
+        station = await self.station(global_id)
+        if station.abbreviation is None:
+            raise ParseError("Station response did not include an abbreviation")
+
+        payload = await self._transport.get_json(
+            "/.rest/aushang/stations",
+            params={"id": station.abbreviation},
+        )
+        return parse_station_schedules(payload)
+
+    async def station_direction_groups(self, global_id: str) -> list[StationDirection]:
+        schedules = await self.station_schedules(global_id)
+        return group_station_schedules(schedules)
 
     async def nearby_stations(self, latitude: float, longitude: float) -> list[Station]:
         payload = await self._transport.get_json(

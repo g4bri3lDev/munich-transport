@@ -42,6 +42,32 @@ class Station:
 
 
 @dataclass(frozen=True, slots=True)
+class StationSchedule:
+    """A station timetable PDF entry from MVG's aushang endpoint."""
+
+    schedule_kind: str
+    line_label: str
+    direction: str
+    pdf_url: str
+    schedule_code: str | None = None
+    station_abbreviation: str | None = None
+    stop_number: str | None = None
+    direction_key: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class StationDirection:
+    """A selectable line/direction group for a station."""
+
+    schedule_kind: str
+    line_label: str
+    direction_key: str | None
+    directions: tuple[str, ...]
+    schedule_codes: tuple[str, ...]
+    schedules: tuple[StationSchedule, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class Line:
     """A transit line."""
 
@@ -75,6 +101,8 @@ class Departure:
     cancelled: bool
     station_global_id: str | None = None
     stop_point_global_id: str | None = None
+    line_id: str | None = None
+    direction_key: str | None = None
     platform: int | None = None
     platform_changed: bool | None = None
     delay_minutes: int | None = None

@@ -14,6 +14,7 @@ from munich_transport.parser import (
     parse_nearby_stations,
     parse_routes,
     parse_station,
+    parse_station_schedules,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -48,6 +49,28 @@ def test_parse_nearby_stations_with_distance() -> None:
     assert stations[0].transport_types == ("UBAHN",)
 
 
+def test_parse_station_schedules() -> None:
+    schedules = parse_station_schedules(
+        load_fixture("station_schedules_marienplatz.json")
+    )
+
+    assert schedules[0].line_label == "U3"
+    assert schedules[0].schedule_kind == "SUBWAY"
+    assert schedules[0].schedule_code == "H"
+    assert schedules[0].station_abbreviation == "MP"
+    assert schedules[0].stop_number == "52"
+    assert schedules[0].direction_key == "H"
+    assert schedules[1].direction == (
+        "Sendlinger Tor / Fürstenried West "
+        "(gültig vom 18.05. - 18.09.2026)"
+    )
+    assert schedules[1].schedule_code == "I"
+    assert schedules[1].direction_key == "H"
+    assert schedules[1].pdf_url.endswith("/U3_I_MP_52.pdf")
+    assert schedules[2].schedule_code == "S"
+    assert schedules[2].direction_key == "R"
+
+
 def test_parse_empty_locations_response() -> None:
     assert parse_locations([]) == []
 
@@ -57,8 +80,12 @@ def test_parse_departures_with_notices() -> None:
 
     assert departures[0].line.label == "132"
     assert departures[0].destination == "Implerstraße"
+    assert departures[0].line_id == "swm:03132:G:H:016"
+    assert departures[0].direction_key == "H"
     assert departures[0].delay_minutes == 2
     assert departures[1].platform == 1
+    assert departures[1].line_id == "ddb:92M08: :H:j26"
+    assert departures[1].direction_key == "H"
     assert departures[1].notices[0].message == "Polizeieinsatz"
 
 

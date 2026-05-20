@@ -1,0 +1,36 @@
+[
+  {
+    "plannedDepartureTime": 1779276480000,
+    "realtime": false,
+    "realtimeDepartureTime": 1779276480000,
+    "transportType": "SBAHN",
+    "label": "S5",
+    "divaId": "92M05",
+    "network": "ddb",
+    "trainType": "",
+    "destination": "Kreuzstraße",
+    "cancelled": true,
+    "sev": false,
+    "platform": 1,
+    "platformChanged": true,
+    "messages": ["Fällt aus"],
+    "infos": [
+      {
+        "message": "technischer Defekt an einem Bahnübergang",
+        "type": "INCIDENT",
+        "network": "ddb"
+      },
+      {
+        "message": "Fährt nur bis Aying",
+        "type": "EARLY_TERMINATION",
+        "network": "unknown"
+      }
+    ],
+    "bannerHash": "",
+    "occupancy": "UNKNOWN",
+    "stationGlobalId": "de:09162:2",
+    "stopPointGlobalId": "",
+    "lineId": "ddb:92M05: :H:j26",
+    "tripCode": 115
+  }
+]

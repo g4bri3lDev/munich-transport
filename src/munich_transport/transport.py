@@ -77,6 +77,8 @@ class AiohttpTransport:
                     return cast(JsonValue, payload)
                 except aiohttp.ContentTypeError as error:
                     raise TransportError("Response did not contain JSON") from error
+                except ValueError as error:
+                    raise TransportError("Response contained invalid JSON") from error
         except TimeoutError as error:
             raise TransportError("Request timed out") from error
         except aiohttp.ClientError as error:

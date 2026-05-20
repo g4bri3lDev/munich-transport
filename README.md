@@ -19,3 +19,9 @@ uv run pytest
 uv run ruff check .
 uv run mypy
 ```
+
+Live endpoint smoke test:
+
+```bash
+uv run python scripts/smoke_mvg.py
+```

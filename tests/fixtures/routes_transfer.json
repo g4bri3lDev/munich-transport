@@ -1,0 +1,137 @@
+[
+  {
+    "uniqueId": -1166858466471494372,
+    "parts": [
+      {
+        "from": {
+          "latitude": 48.137312,
+          "longitude": 11.57534,
+          "stationGlobalId": "de:09162:2",
+          "stationDivaId": 2,
+          "platform": 2,
+          "platformChanged": false,
+          "place": "München",
+          "name": "Marienplatz",
+          "plannedDeparture": "2026-05-20T13:16:00+02:00",
+          "departureDelayInMinutes": 4,
+          "transportTypes": ["UBAHN", "BUS", "SBAHN"],
+          "isViaStop": false,
+          "occupancy": "UNKNOWN",
+          "hasZoomData": true
+        },
+        "to": {
+          "latitude": 48.14132,
+          "longitude": 11.560042,
+          "stationGlobalId": "de:09162:100",
+          "stationDivaId": 100,
+          "platform": 2,
+          "platformChanged": false,
+          "place": "München",
+          "name": "München Hbf",
+          "plannedDeparture": "2026-05-20T13:19:00+02:00",
+          "arrivalDelayInMinutes": 4,
+          "transportTypes": ["BUS", "SBAHN", "BAHN"],
+          "isViaStop": false,
+          "occupancy": "UNKNOWN",
+          "hasZoomData": false
+        },
+        "intermediateStops": [
+          {
+            "latitude": 48.139756,
+            "longitude": 11.565252,
+            "stationGlobalId": "de:09162:1",
+            "stationDivaId": 1,
+            "platform": 2,
+            "platformChanged": false,
+            "place": "München",
+            "name": "Karlsplatz (Stachus)",
+            "plannedDeparture": "2026-05-20T13:18:00+02:00",
+            "departureDelayInMinutes": 4,
+            "arrivalDelayInMinutes": 4,
+            "transportTypes": ["UBAHN", "BUS", "TRAM", "SBAHN"],
+            "isViaStop": false,
+            "occupancy": "UNKNOWN",
+            "hasZoomData": true
+          }
+        ],
+        "noChangeRequired": false,
+        "line": {
+          "label": "S4",
+          "transportType": "SBAHN",
+          "destination": "Buchenau",
+          "trainType": "",
+          "network": "ddb",
+          "divaId": "92M04",
+          "sev": false
+        },
+        "pathPolyline": "eyxdHitseA",
+        "interchangePathPolyline": "",
+        "pathDescription": [],
+        "distance": 1179.550620285665,
+        "messages": [],
+        "infos": [
+          {
+            "message": "Polizeieinsatz",
+            "type": "INCIDENT",
+            "network": "ddb"
+          }
+        ],
+        "realTime": true
+      },
+      {
+        "from": {
+          "latitude": 48.14132,
+          "longitude": 11.560042,
+          "stationGlobalId": "de:09162:100",
+          "stationDivaId": 100,
+          "place": "München",
+          "name": "München Hbf",
+          "plannedDeparture": "2026-05-20T13:23:00+02:00",
+          "transportTypes": ["BUS", "SBAHN", "BAHN"],
+          "isViaStop": false,
+          "occupancy": "UNKNOWN",
+          "hasZoomData": false
+        },
+        "to": {
+          "latitude": 48.140028,
+          "longitude": 11.561066,
+          "stationGlobalId": "de:09162:6",
+          "stationDivaId": 6,
+          "place": "München",
+          "name": "Hauptbahnhof (U, Tram)",
+          "plannedDeparture": "2026-05-20T13:25:00+02:00",
+          "transportTypes": ["UBAHN", "TRAM", "BAHN"],
+          "isViaStop": false,
+          "occupancy": "UNKNOWN",
+          "hasZoomData": true
+        },
+        "intermediateStops": [],
+        "noChangeRequired": false,
+        "line": {
+          "label": "Fussweg",
+          "transportType": "PEDESTRIAN",
+          "destination": "",
+          "trainType": "",
+          "network": "unknown",
+          "divaId": "",
+          "sev": false
+        },
+        "pathPolyline": "arydHcypeA",
+        "interchangePathPolyline": "",
+        "pathDescription": [],
+        "distance": 120.2105558812772,
+        "messages": [],
+        "infos": [],
+        "realTime": false
+      }
+    ],
+    "ticketingInformation": {
+      "zones": [0],
+      "alternativeZones": [],
+      "unifiedTicketIds": ["KURZE"]
+    },
+    "distance": 1299.7611761669423,
+    "bannerHash": "",
+    "refreshId": "fixture"
+  }
+]

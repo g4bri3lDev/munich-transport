@@ -1,0 +1,15 @@
+[
+  {
+    "globalId": "de:09162:410",
+    "name": "Bonner Platz",
+    "place": "München",
+    "latitude": 48.166702,
+    "longitude": 11.578152,
+    "transportTypes": ["UBAHN"],
+    "tariffZones": "m",
+    "aliases": "Muenchen Munchen BP",
+    "divaId": 410,
+    "hasZoomData": true,
+    "distanceInMeters": 221
+  }
+]

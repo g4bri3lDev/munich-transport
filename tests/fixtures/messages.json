@@ -1,0 +1,23 @@
+[
+  {
+    "title": "Sendlinger Tor <> Implerstraße: Ersatzverkehr mit Bussen",
+    "description": "<div>Sanierungsarbeiten</div>",
+    "publication": 1777240800000,
+    "validFrom": 1777240800000,
+    "validTo": 1789686000000,
+    "type": "INCIDENT",
+    "provider": "MVG",
+    "links": [],
+    "lines": [
+      {
+        "label": "U3",
+        "transportType": "UBAHN",
+        "network": "swm",
+        "divaId": "010U3",
+        "sev": false
+      }
+    ],
+    "stationGlobalIds": [],
+    "eventTypes": []
+  }
+]

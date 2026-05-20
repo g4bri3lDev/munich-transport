@@ -1,0 +1,18 @@
+[
+  {
+    "label": "U3",
+    "transportType": "UBAHN",
+    "trainType": "",
+    "network": "SWM",
+    "divaId": "010U3",
+    "sev": false
+  },
+  {
+    "label": "S8",
+    "transportType": "SBAHN",
+    "trainType": "",
+    "network": "DDB",
+    "divaId": "92M08",
+    "sev": false
+  }
+]

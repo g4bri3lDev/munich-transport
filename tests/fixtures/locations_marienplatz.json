@@ -1,0 +1,25 @@
+[
+  {
+    "latitude": 48.137245,
+    "longitude": 11.575421,
+    "place": "München",
+    "name": "Marienplatz",
+    "globalId": "de:09162:2",
+    "divaId": 2,
+    "hasZoomData": true,
+    "transportTypes": ["SBAHN", "UBAHN", "BUS"],
+    "aliases": "",
+    "tariffZones": "m",
+    "type": "STATION"
+  },
+  {
+    "latitude": 48.1380433,
+    "longitude": 11.5766003,
+    "place": "München",
+    "name": "Marienplatz 8",
+    "postCode": "80331",
+    "street": "Marienplatz",
+    "houseNumber": "8",
+    "type": "ADDRESS"
+  }
+]

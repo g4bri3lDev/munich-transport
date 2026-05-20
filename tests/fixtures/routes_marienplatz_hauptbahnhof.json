@@ -1,0 +1,62 @@
+[
+  {
+    "uniqueId": -1237819603061240,
+    "parts": [
+      {
+        "from": {
+          "latitude": 48.137712,
+          "longitude": 11.572906,
+          "stationGlobalId": "de:09162:2",
+          "stationDivaId": 2,
+          "place": "München",
+          "name": "Marienplatz",
+          "plannedDeparture": "2026-05-20T13:19:00+02:00",
+          "transportTypes": ["UBAHN", "BUS", "SBAHN"],
+          "isViaStop": false,
+          "occupancy": "UNKNOWN",
+          "hasZoomData": true
+        },
+        "to": {
+          "latitude": 48.13944,
+          "longitude": 11.561668,
+          "stationGlobalId": "de:09162:6",
+          "stationDivaId": 6,
+          "place": "München",
+          "name": "Hauptbahnhof (U, Tram)",
+          "plannedDeparture": "2026-05-20T13:32:00+02:00",
+          "transportTypes": ["UBAHN", "TRAM", "BAHN"],
+          "isViaStop": false,
+          "occupancy": "UNKNOWN",
+          "hasZoomData": true
+        },
+        "intermediateStops": [],
+        "noChangeRequired": false,
+        "line": {
+          "label": "Fussweg",
+          "transportType": "PEDESTRIAN",
+          "destination": "",
+          "trainType": "",
+          "network": "unknown",
+          "divaId": "",
+          "sev": false
+        },
+        "pathPolyline": "u{xdHsiseA@?",
+        "interchangePathPolyline": "",
+        "pathDescription": [],
+        "distance": 902.9779027070497,
+        "occupancy": "UNKNOWN",
+        "messages": [],
+        "infos": [],
+        "realTime": false
+      }
+    ],
+    "ticketingInformation": {
+      "zones": [],
+      "alternativeZones": [],
+      "unifiedTicketIds": []
+    },
+    "distance": 902.9779027070497,
+    "bannerHash": "",
+    "refreshId": "fixture"
+  }
+]

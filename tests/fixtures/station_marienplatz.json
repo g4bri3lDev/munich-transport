@@ -1,0 +1,11 @@
+{
+  "name": "Marienplatz",
+  "place": "München",
+  "id": "de:09162:2",
+  "divaId": 2,
+  "abbreviation": "MP",
+  "tariffZones": "m",
+  "products": ["SBAHN", "UBAHN", "BUS"],
+  "latitude": 48.137245,
+  "longitude": 11.575421
+}

@@ -1,0 +1,55 @@
+[
+  {
+    "plannedDepartureTime": 1779275760000,
+    "realtime": true,
+    "delayInMinutes": 2,
+    "realtimeDepartureTime": 1779275880000,
+    "transportType": "BUS",
+    "label": "132",
+    "divaId": "03132",
+    "network": "swm",
+    "trainType": "",
+    "destination": "Implerstraße",
+    "cancelled": false,
+    "sev": false,
+    "messages": [],
+    "infos": [],
+    "bannerHash": "",
+    "occupancy": "LOW",
+    "stationGlobalId": "de:09162:2",
+    "stopPointGlobalId": "de:09162:2:4:4",
+    "lineId": "swm:03132:G:H:016",
+    "tripId": "3670632",
+    "tripCode": 220
+  },
+  {
+    "plannedDepartureTime": 1779275820000,
+    "realtime": true,
+    "delayInMinutes": 1,
+    "realtimeDepartureTime": 1779275880000,
+    "transportType": "SBAHN",
+    "label": "S8",
+    "divaId": "92M08",
+    "network": "ddb",
+    "trainType": "",
+    "destination": "Flughafen München",
+    "cancelled": false,
+    "sev": false,
+    "platform": 1,
+    "platformChanged": false,
+    "messages": [],
+    "infos": [
+      {
+        "message": "Polizeieinsatz",
+        "type": "INCIDENT",
+        "network": "ddb"
+      }
+    ],
+    "bannerHash": "",
+    "occupancy": "UNKNOWN",
+    "stationGlobalId": "de:09162:2",
+    "stopPointGlobalId": "",
+    "lineId": "ddb:92M08: :H:j26",
+    "tripCode": 212
+  }
+]

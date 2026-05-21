@@ -19,6 +19,7 @@ _VALIDITY_SUFFIX_RE = re.compile(
     r"(?:,\s*(?:gültig|nicht gültig|nur gültig)\b|"
     r"\s+\((?:gültig|nicht gültig|nur gültig|vom)\b).*$",
 )
+_PARENTHETICAL_NOTE_RE = re.compile(r"\s*\([^)]*\)")
 
 
 def group_station_schedules(
@@ -108,7 +109,8 @@ def _direction_option_id(group: StationDirection) -> str:
 
 
 def _display_direction(direction: str) -> str:
-    return _VALIDITY_SUFFIX_RE.sub("", direction).strip()
+    without_validity = _VALIDITY_SUFFIX_RE.sub("", direction)
+    return _PARENTHETICAL_NOTE_RE.sub("", without_validity).strip()
 
 
 def _unique[T](values: Iterable[T]) -> tuple[T, ...]:

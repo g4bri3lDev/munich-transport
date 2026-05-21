@@ -156,6 +156,28 @@ def test_build_station_direction_options_returns_config_shape() -> None:
     )
 
 
+def test_build_station_direction_options_strips_parenthetical_notes() -> None:
+    schedules = [
+        StationSchedule(
+            schedule_kind="TRAM",
+            line_label="28",
+            direction="Sendlinger Tor (ab Kurfürstenplatz in Linie 27 enthalten)",
+            pdf_url="https://www.mvg.de/aushangfahrplan/28_H_SP_1.pdf",
+            schedule_code="H",
+            station_abbreviation="SP",
+            stop_number="1",
+            direction_key="H",
+        ),
+    ]
+
+    options = build_station_direction_options(schedules)
+
+    assert options[0].directions == ("Sendlinger Tor",)
+    assert options[0].raw_directions == (
+        "Sendlinger Tor (ab Kurfürstenplatz in Linie 27 enthalten)",
+    )
+
+
 def test_bonner_platz_characterization_groups_temporary_u3_termini() -> None:
     schedules = parse_station_schedules(
         load_fixture("station_schedules_bonner_platz.json")

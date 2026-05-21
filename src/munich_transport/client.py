@@ -27,7 +27,11 @@ from .parser import (
     parse_station,
     parse_station_schedules,
 )
-from .schedules import build_station_direction_options, group_station_schedules
+from .schedules import (
+    build_departure_direction_options,
+    build_station_direction_options,
+    group_station_schedules,
+)
 from .transport import AiohttpTransport, Transport
 from .types import DEFAULT_DEPARTURE_TRANSPORT_TYPES, DEFAULT_TRANSPORT_TYPES
 
@@ -84,7 +88,12 @@ class MunichTransportClient:
         self,
         global_id: str,
     ) -> list[StationDirectionOption]:
-        schedules = await self.station_schedules(global_id)
+        station = await self.station(global_id)
+        if station.abbreviation is None:
+            departures = await self.departures(global_id)
+            return build_departure_direction_options(departures)
+
+        schedules = await self.station_schedules_by_abbreviation(station.abbreviation)
         return build_station_direction_options(schedules)
 
     async def station_direction_options_by_abbreviation(

@@ -6,7 +6,12 @@ import re
 from collections import OrderedDict
 from collections.abc import Iterable
 
-from .models import StationDirection, StationDirectionOption, StationSchedule
+from .models import (
+    Departure,
+    StationDirection,
+    StationDirectionOption,
+    StationSchedule,
+)
 
 NON_SERVICE_SCHEDULE_KINDS: frozenset[str] = frozenset(
     {
@@ -82,6 +87,52 @@ def build_station_direction_options(
     ]
 
 
+def build_departure_direction_options(
+    departures: Iterable[Departure],
+) -> list[StationDirectionOption]:
+    """Build compact line/direction options from live departure data.
+
+    This is a fallback for stops that do not expose MVG's station schedule
+    catalog metadata. When no live direction key exists, destinations are kept
+    separate so unrelated directions on the same line do not collapse together.
+    """
+
+    grouped: dict[tuple[str, str, str | None, str | None], list[Departure]] = {}
+    for departure in departures:
+        direction_key = departure.direction_key
+        destination_key = None if direction_key is not None else departure.destination
+        key = (
+            departure.line.transport_type,
+            departure.line.label,
+            direction_key,
+            destination_key,
+        )
+        grouped.setdefault(key, []).append(departure)
+
+    return [
+        _build_departure_direction_option(
+            schedule_kind,
+            line_label,
+            direction_key,
+            group_departures,
+        )
+        for (
+            schedule_kind,
+            line_label,
+            direction_key,
+            _,
+        ), group_departures in sorted(
+            grouped.items(),
+            key=lambda item: (
+                item[0][0],
+                item[0][1],
+                item[0][2] or "",
+                item[0][3] or "",
+            ),
+        )
+    ]
+
+
 def _build_direction_option(group: StationDirection) -> StationDirectionOption:
     directions = _unique(
         _display_direction(direction) for direction in group.directions
@@ -95,6 +146,25 @@ def _build_direction_option(group: StationDirection) -> StationDirectionOption:
         directions=directions,
         raw_directions=group.directions,
         schedule_codes=group.schedule_codes,
+    )
+
+
+def _build_departure_direction_option(
+    schedule_kind: str,
+    line_label: str,
+    direction_key: str | None,
+    departures: list[Departure],
+) -> StationDirectionOption:
+    directions = _unique(departure.destination for departure in departures)
+    suffix = direction_key or directions[0]
+    return StationDirectionOption(
+        id=f"{schedule_kind}:{line_label}:{suffix}",
+        schedule_kind=schedule_kind,
+        line_label=line_label,
+        direction_key=direction_key,
+        directions=directions,
+        raw_directions=directions,
+        schedule_codes=(),
     )
 
 

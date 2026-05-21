@@ -14,7 +14,11 @@ from .models import (
     StationDirectionOption,
     StationSchedule,
 )
-from .schedules import build_station_direction_options, group_station_schedules
+from .schedules import (
+    build_departure_direction_options,
+    build_station_direction_options,
+    group_station_schedules,
+)
 from .transport import AiohttpTransport
 
 __all__ = [
@@ -34,6 +38,7 @@ __all__ = [
     "StationDirectionOption",
     "StationSchedule",
     "TransportError",
+    "build_departure_direction_options",
     "build_station_direction_options",
     "group_station_schedules",
 ]

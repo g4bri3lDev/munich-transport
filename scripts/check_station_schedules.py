@@ -13,6 +13,7 @@ from collections.abc import Iterable, Sequence
 from munich_transport import AiohttpTransport, MunichTransportClient
 from munich_transport.models import Location
 from munich_transport.schedules import (
+    build_departure_direction_options,
     build_station_direction_options,
     group_station_schedules,
 )
@@ -56,7 +57,11 @@ async def _run(
         resolved_global_id = global_id or await _resolve_station(client, query or "")
 
         station = await client.station(resolved_global_id)
-        schedules = await client.station_schedules(resolved_global_id)
+        schedules = (
+            await client.station_schedules_by_abbreviation(station.abbreviation)
+            if station.abbreviation
+            else []
+        )
         lines = await client.lines(resolved_global_id)
         departures = await client.departures(
             resolved_global_id,
@@ -89,7 +94,12 @@ async def _run(
 
     print()
     print("integration options:")
-    for option in build_station_direction_options(schedules):
+    options = (
+        build_station_direction_options(schedules)
+        if schedules
+        else build_departure_direction_options(departures)
+    )
+    for option in options:
         print(f"- {option.id}: {_format_option(option.line_label, option.directions)}")
 
     print()
@@ -103,9 +113,9 @@ async def _run(
         )
     )
 
-    if not schedules:
+    if not options:
         print()
-        print("error: station schedule catalog returned no entries")
+        print("error: no station schedule or live departure options found")
         return 1
     return 0
 

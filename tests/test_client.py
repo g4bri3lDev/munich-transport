@@ -188,6 +188,73 @@ async def test_station_direction_options_returns_config_options() -> None:
     assert options[0].directions == ("Moosach Bf", "Implerstraße / Moosach Bf")
 
 
+async def test_station_direction_options_falls_back_without_abbreviation() -> None:
+    transport = FakeTransport(
+        (
+            {
+                "id": "de:09274:3590",
+                "name": "Oberglaim",
+                "place": "Ergolding",
+                "divaId": 3590,
+                "products": ["BUS"],
+                "latitude": 48.58163,
+                "longitude": 12.15263,
+            },
+            [
+                {
+                    "plannedDepartureTime": 1779275760000,
+                    "realtime": True,
+                    "delayInMinutes": 0,
+                    "realtimeDepartureTime": 1779275760000,
+                    "transportType": "REGIONAL_BUS",
+                    "label": "534",
+                    "divaId": "12534",
+                    "network": "mvv",
+                    "destination": "Pfarrkofen (Ergolding)",
+                    "cancelled": False,
+                    "messages": [],
+                    "infos": [],
+                    "lineId": "mvv:12534: :H:j26",
+                },
+                {
+                    "plannedDepartureTime": 1779279360000,
+                    "realtime": True,
+                    "delayInMinutes": 0,
+                    "realtimeDepartureTime": 1779279360000,
+                    "transportType": "REGIONAL_BUS",
+                    "label": "534",
+                    "divaId": "12534",
+                    "network": "mvv",
+                    "destination": "Landshut ü. Ergolding",
+                    "cancelled": False,
+                    "messages": [],
+                    "infos": [],
+                    "lineId": "mvv:12534: :R:j26",
+                },
+            ],
+        )
+    )
+    client = MunichTransportClient(transport)
+
+    options = await client.station_direction_options("de:09274:3590")
+
+    assert [option.id for option in options] == [
+        "REGIONAL_BUS:534:H",
+        "REGIONAL_BUS:534:R",
+    ]
+    assert transport.calls == [
+        ("/.rest/zdm/stations/de:09274:3590", None),
+        (
+            "/api/bgw-pt/v3/departures",
+            {
+                "globalId": "de:09274:3590",
+                "limit": "100",
+                "transportTypes": "UBAHN,TRAM,SBAHN,BUS,REGIONAL_BUS,BAHN",
+            },
+        ),
+    ]
+
+
 async def test_direction_options_by_abbreviation_avoids_station_lookup() -> None:
     transport = FakeTransport(
         [

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
-from munich_transport.models import StationSchedule
+from munich_transport.models import Departure, Line, StationSchedule
 from munich_transport.parser import parse_station_schedules
 from munich_transport.schedules import (
+    build_departure_direction_options,
     build_station_direction_options,
     group_station_schedules,
 )
@@ -156,6 +158,46 @@ def test_build_station_direction_options_returns_config_shape() -> None:
     )
 
 
+def test_build_departure_direction_options_groups_by_live_direction_key() -> None:
+    departures = [
+        _departure("534", "REGIONAL_BUS", "H", "Pfarrkofen (Ergolding)"),
+        _departure("534", "REGIONAL_BUS", "H", "Rottenburg ü.Hohenthann"),
+        _departure("534", "REGIONAL_BUS", "R", "Landshut ü. Ergolding"),
+    ]
+
+    options = build_departure_direction_options(departures)
+
+    assert [option.id for option in options] == [
+        "REGIONAL_BUS:534:H",
+        "REGIONAL_BUS:534:R",
+    ]
+    assert options[0].directions == (
+        "Pfarrkofen (Ergolding)",
+        "Rottenburg ü.Hohenthann",
+    )
+    assert options[0].raw_directions == options[0].directions
+    assert options[0].schedule_codes == ()
+
+
+def test_build_departure_direction_options_keeps_unkeyed_destinations() -> None:
+    departures = [
+        _departure("N40", "NIGHT_LINE", None, "Klinikum Großhadern"),
+        _departure("N40", "NIGHT_LINE", None, "Kieferngarten"),
+        _departure("N40", "NIGHT_LINE", None, "Klinikum Großhadern"),
+    ]
+
+    options = build_departure_direction_options(departures)
+
+    assert [option.id for option in options] == [
+        "NIGHT_LINE:N40:Kieferngarten",
+        "NIGHT_LINE:N40:Klinikum Großhadern",
+    ]
+    assert [option.directions for option in options] == [
+        ("Kieferngarten",),
+        ("Klinikum Großhadern",),
+    ]
+
+
 def test_build_station_direction_options_strips_parenthetical_notes() -> None:
     schedules = [
         StationSchedule(
@@ -237,3 +279,21 @@ def test_marienplatz_characterization_schedule_catalog_has_no_s_bahn() -> None:
     )
 
     assert not any(schedule.line_label.startswith("S") for schedule in schedules)
+
+
+def _departure(
+    line_label: str,
+    transport_type: str,
+    direction_key: str | None,
+    destination: str,
+) -> Departure:
+    timestamp = datetime(2026, 5, 21, 12, 0, tzinfo=UTC)
+    return Departure(
+        planned_departure=timestamp,
+        realtime_departure=timestamp,
+        line=Line(label=line_label, transport_type=transport_type),
+        destination=destination,
+        realtime=True,
+        cancelled=False,
+        direction_key=direction_key,
+    )

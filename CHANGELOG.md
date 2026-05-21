@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/g4bri3lDev/munich-transport/compare/v0.1.0...v0.1.1) (2026-05-21)
+
+
+### Bug Fixes
+
+* support direction options without schedules ([3ae7b63](https://github.com/g4bri3lDev/munich-transport/commit/3ae7b63ed5607178026f01ca87eedaf72bd79668))
+
 ## 0.1.0 (2026-05-21)
 
 

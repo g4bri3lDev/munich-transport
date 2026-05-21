@@ -1,6 +1,6 @@
 [project]
 name = "munich-transport"
-version = "0.1.0"
+version = "0.1.1"
 description = "Async Python client for Munich public transport data."
 readme = "README.md"
 requires-python = ">=3.12"

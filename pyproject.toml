@@ -4,9 +4,15 @@ version = "0.1.0"
 description = "Async Python client for Munich public transport data."
 readme = "README.md"
 requires-python = ">=3.12"
+license = "Apache-2.0"
 dependencies = [
     "aiohttp>=3.10",
 ]
+
+[project.urls]
+Homepage = "https://github.com/g4bri3lDev/munich-transport"
+Repository = "https://github.com/g4bri3lDev/munich-transport"
+Issues = "https://github.com/g4bri3lDev/munich-transport/issues"
 
 [dependency-groups]
 dev = [

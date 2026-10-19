@@ -173,8 +173,7 @@ async def test_station_direction_options_returns_config_options() -> None:
                     "scheduleKind": "SUBWAY",
                     "scheduleName": "U3",
                     "direction": (
-                        "Implerstraße / Moosach Bf "
-                        "(gültig vom 18.05. - 18.09.2026)"
+                        "Implerstraße / Moosach Bf (gültig vom 18.05. - 18.09.2026)"
                     ),
                 },
             ],

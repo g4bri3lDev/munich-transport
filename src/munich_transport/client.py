@@ -180,7 +180,11 @@ def _format_routing_time(value: datetime | None) -> str:
     moment = value or datetime.now(tz=UTC)
     if moment.tzinfo is None:
         moment = moment.replace(tzinfo=UTC)
-    return moment.astimezone(UTC).isoformat(timespec="milliseconds").replace(
-        "+00:00",
-        "Z",
+    return (
+        moment.astimezone(UTC)
+        .isoformat(timespec="milliseconds")
+        .replace(
+            "+00:00",
+            "Z",
+        )
     )

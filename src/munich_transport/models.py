@@ -259,6 +259,5 @@ class Disruption:
         if not any(line.label == line_label for line in self.lines):
             return False
         return (
-            not self.station_global_ids
-            or station_global_id in self.station_global_ids
+            not self.station_global_ids or station_global_id in self.station_global_ids
         )

@@ -86,8 +86,7 @@ def build_station_direction_options(
     """Build compact line/direction options suitable for integration config."""
 
     return [
-        _build_direction_option(group)
-        for group in group_station_schedules(schedules)
+        _build_direction_option(group) for group in group_station_schedules(schedules)
     ]
 
 

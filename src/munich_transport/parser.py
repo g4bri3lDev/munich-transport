@@ -53,8 +53,7 @@ def parse_nearby_stations(payload: object) -> list[Station]:
 def parse_station_schedules(payload: object) -> list[StationSchedule]:
     items = _as_list(payload, "station schedules response")
     return [
-        _parse_station_schedule(_as_mapping(item, "station schedule"))
-        for item in items
+        _parse_station_schedule(_as_mapping(item, "station schedule")) for item in items
     ]
 
 
@@ -270,10 +269,7 @@ def _parse_notices(value: object) -> tuple[Notice, ...]:
             kind=_optional_str(item, "type"),
             network=_optional_str(item, "network"),
         )
-        for item in (
-            _as_mapping(raw, "notice")
-            for raw in _as_list(value, "notices")
-        )
+        for item in (_as_mapping(raw, "notice") for raw in _as_list(value, "notices"))
     )
 
 

@@ -61,8 +61,7 @@ def test_parse_station_schedules() -> None:
     assert schedules[0].stop_number == "52"
     assert schedules[0].direction_key == "H"
     assert schedules[1].direction == (
-        "Sendlinger Tor / Fürstenried West "
-        "(gültig vom 18.05. - 18.09.2026)"
+        "Sendlinger Tor / Fürstenried West (gültig vom 18.05. - 18.09.2026)"
     )
     assert schedules[1].schedule_code == "I"
     assert schedules[1].direction_key == "H"

@@ -17,7 +17,9 @@ from .models import (
 from .schedules import (
     build_departure_direction_options,
     build_station_direction_options,
+    direction_names_match,
     group_station_schedules,
+    select_departures,
 )
 from .transport import AiohttpTransport
 
@@ -40,5 +42,7 @@ __all__ = [
     "TransportError",
     "build_departure_direction_options",
     "build_station_direction_options",
+    "direction_names_match",
     "group_station_schedules",
+    "select_departures",
 ]

@@ -56,6 +56,10 @@ jobs:
         if: ${{ steps.release.outputs.release_created || inputs.tag }}
         run: uv run ruff check .
 
+      - name: Check formatting
+        if: ${{ steps.release.outputs.release_created || inputs.tag }}
+        run: uv run ruff format --check .
+
       - name: Run type checker
         if: ${{ steps.release.outputs.release_created || inputs.tag }}
         run: uv run mypy

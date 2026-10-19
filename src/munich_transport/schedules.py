@@ -25,6 +25,10 @@ _VALIDITY_SUFFIX_RE = re.compile(
     r"\s+\((?:gültig|nicht gültig|nur gültig|vom)\b).*$",
 )
 _PARENTHETICAL_NOTE_RE = re.compile(r"\s*\([^)]*\)")
+_NON_WORD_RE = re.compile(r"[^\w\s]")
+_STATION_SUFFIX_TOKENS: frozenset[str] = frozenset(
+    {"bahnhof", "bf", "bhf", "hbf", "hauptbahnhof"}
+)
 
 
 def group_station_schedules(
@@ -82,8 +86,7 @@ def build_station_direction_options(
     """Build compact line/direction options suitable for integration config."""
 
     return [
-        _build_direction_option(group)
-        for group in group_station_schedules(schedules)
+        _build_direction_option(group) for group in group_station_schedules(schedules)
     ]
 
 
@@ -131,6 +134,65 @@ def build_departure_direction_options(
             ),
         )
     ]
+
+
+def select_departures(
+    departures: Iterable[Departure],
+    options: Iterable[StationDirectionOption],
+    *,
+    include_cancelled: bool = False,
+) -> list[Departure]:
+    """Return departures on any of the given options, soonest first.
+
+    An empty set of options selects every departure.
+    """
+
+    selected = tuple(options)
+    return sorted(
+        (
+            departure
+            for departure in departures
+            if (include_cancelled or not departure.cancelled)
+            and (not selected or any(option.matches(departure) for option in selected))
+        ),
+        key=lambda departure: departure.realtime_departure,
+    )
+
+
+def direction_names_match(name: str, other: str) -> bool:
+    """Return whether two spellings of a direction name the same place.
+
+    Ignores case, punctuation and station suffixes such as "Bf." or "Hbf",
+    and accepts one name contained in the other, so "Giesing" matches
+    "Giesing Bf." and "Tierpark (Alemannenstr)" matches
+    "Tierpark (Alemannenstr.)".
+    """
+
+    tokens = _direction_tokens(name)
+    other_tokens = _direction_tokens(other)
+    if not tokens or not other_tokens:
+        return False
+    return _contains_token_sequence(tokens, other_tokens) or _contains_token_sequence(
+        other_tokens, tokens
+    )
+
+
+def _direction_tokens(value: str) -> tuple[str, ...]:
+    normalized = _NON_WORD_RE.sub(" ", value.casefold())
+    return tuple(
+        token for token in normalized.split() if token not in _STATION_SUFFIX_TOKENS
+    )
+
+
+def _contains_token_sequence(
+    tokens: tuple[str, ...],
+    search_tokens: tuple[str, ...],
+) -> bool:
+    length = len(search_tokens)
+    return any(
+        tokens[index : index + length] == search_tokens
+        for index in range(len(tokens) - length + 1)
+    )
 
 
 def _build_direction_option(group: StationDirection) -> StationDirectionOption:

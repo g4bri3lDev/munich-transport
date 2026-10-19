@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -78,6 +79,52 @@ class StationDirectionOption:
     directions: tuple[str, ...]
     raw_directions: tuple[str, ...]
     schedule_codes: tuple[str, ...]
+
+    @classmethod
+    def from_id(cls, option_id: str) -> StationDirectionOption:
+        """Rebuild an option from its stable id when the catalog is unavailable.
+
+        The result can match departures but has no direction names. The id's
+        last part is read as the direction key, which is what catalog options
+        with a live direction use.
+        """
+
+        parts = option_id.split(":", maxsplit=2)
+        if len(parts) != 3:
+            raise ValueError(f"Not a direction option id: {option_id!r}")
+
+        schedule_kind, line_label, direction_key = parts
+        return cls(
+            id=option_id,
+            schedule_kind=schedule_kind,
+            line_label=line_label,
+            direction_key=direction_key or None,
+            directions=(),
+            raw_directions=(),
+            schedule_codes=(),
+        )
+
+    @property
+    def normal_terminus(self) -> str | None:
+        """Return the regular terminus, skipping temporary "A / B" variants."""
+
+        for direction in self.directions:
+            if "/" not in direction:
+                return direction
+        return self.directions[0] if self.directions else None
+
+    def matches(self, departure: Departure) -> bool:
+        """Return whether a live departure runs on this line and direction.
+
+        Without a direction key every departure of the line matches, since
+        catalog direction names and live destinations are spelled differently.
+        """
+
+        if departure.line.label != self.line_label:
+            return False
+        if self.direction_key is None:
+            return True
+        return departure.direction_key == self.direction_key
 
 
 @dataclass(frozen=True, slots=True)
@@ -180,3 +227,37 @@ class Disruption:
     valid_to: datetime | None = None
     lines: tuple[Line, ...] = ()
     station_global_ids: tuple[str, ...] = ()
+
+    def is_active(self, at: datetime) -> bool:
+        """Return whether the message is valid at the given time."""
+
+        if self.valid_from is not None and self.valid_from > at:
+            return False
+        return self.valid_to is None or self.valid_to >= at
+
+    def affects_station(self, global_id: str, line_labels: Iterable[str]) -> bool:
+        """Return whether the message concerns a station served by these lines.
+
+        Messages naming stations only concern those stations. Messages naming
+        neither stations nor lines are network-wide.
+        """
+
+        if self.station_global_ids:
+            return global_id in self.station_global_ids
+        if not self.lines:
+            return True
+        labels = set(line_labels)
+        return any(line.label in labels for line in self.lines)
+
+    def affects_line(self, line_label: str, station_global_id: str) -> bool:
+        """Return whether the message names this line at this station.
+
+        Network-wide messages without lines do not count, so a line is not
+        reported as disrupted by general announcements.
+        """
+
+        if not any(line.label == line_label for line in self.lines):
+            return False
+        return (
+            not self.station_global_ids or station_global_id in self.station_global_ids
+        )

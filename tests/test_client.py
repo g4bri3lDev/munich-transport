@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from munich_transport.client import MunichTransportClient
+from munich_transport.models import Station
 from munich_transport.types import JsonValue
 
 
@@ -296,3 +297,65 @@ async def test_routes_formats_datetime_as_utc_browser_parameter() -> None:
         "changeSpeed": "NORMAL",
         "routeType": "LEAST_TIME",
     }
+
+
+async def test_direction_options_for_station_uses_catalog_without_lookup() -> None:
+    transport = FakeTransport(
+        [
+            {
+                "uri": "https://www.mvg.de/aushangfahrplan/U3_R_BP_51.pdf",
+                "scheduleKind": "SUBWAY",
+                "scheduleName": "U3",
+                "direction": "Moosach Bf, gültig ab 14.12.2025",
+            },
+        ]
+    )
+    client = MunichTransportClient(transport)
+    station = Station(
+        global_id="de:09162:410",
+        name="Bonner Platz",
+        place="München",
+        latitude=48.16,
+        longitude=11.58,
+        abbreviation="BP",
+    )
+
+    options = await client.direction_options_for_station(station)
+
+    assert [option.id for option in options] == ["SUBWAY:U3:R"]
+    assert transport.calls == [("/.rest/aushang/stations", {"id": "BP"})]
+
+
+async def test_direction_options_for_station_falls_back_to_departures() -> None:
+    transport = FakeTransport(
+        [
+            {
+                "plannedDepartureTime": 1779275760000,
+                "realtime": True,
+                "delayInMinutes": 0,
+                "realtimeDepartureTime": 1779275760000,
+                "transportType": "REGIONAL_BUS",
+                "label": "534",
+                "divaId": "12534",
+                "network": "mvv",
+                "destination": "Pfarrkofen (Ergolding)",
+                "cancelled": False,
+                "messages": [],
+                "infos": [],
+                "lineId": "mvv:12534: :H:j26",
+            },
+        ]
+    )
+    client = MunichTransportClient(transport)
+    station = Station(
+        global_id="de:09274:3590",
+        name="Oberglaim",
+        place="Ergolding",
+        latitude=48.58,
+        longitude=12.15,
+    )
+
+    options = await client.direction_options_for_station(station)
+
+    assert [option.id for option in options] == ["REGIONAL_BUS:534:H"]
+    assert [path for path, _ in transport.calls] == ["/api/bgw-pt/v3/departures"]

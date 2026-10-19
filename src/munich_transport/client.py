@@ -88,13 +88,25 @@ class MunichTransportClient:
         self,
         global_id: str,
     ) -> list[StationDirectionOption]:
-        station = await self.station(global_id)
+        return await self.direction_options_for_station(await self.station(global_id))
+
+    async def direction_options_for_station(
+        self,
+        station: Station,
+    ) -> list[StationDirectionOption]:
+        """Return selectable directions without looking the station up again.
+
+        Uses the schedule catalog when the station has an abbreviation, and
+        otherwise derives options from live departures.
+        """
+
         if station.abbreviation is None:
-            departures = await self.departures(global_id)
+            departures = await self.departures(station.global_id)
             return build_departure_direction_options(departures)
 
-        schedules = await self.station_schedules_by_abbreviation(station.abbreviation)
-        return build_station_direction_options(schedules)
+        return await self.station_direction_options_by_abbreviation(
+            station.abbreviation
+        )
 
     async def station_direction_options_by_abbreviation(
         self,

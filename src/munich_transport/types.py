@@ -26,3 +26,7 @@ DEFAULT_DEPARTURE_TRANSPORT_TYPES: Final[tuple[str, ...]] = (
     "REGIONAL_BUS",
     "BAHN",
 )
+
+# Live departures reach only about half an hour ahead, so lines missing from
+# the schedule catalog are discovered by sampling departures across a day.
+DIRECTION_SAMPLE_OFFSETS_MINUTES: Final[tuple[int, ...]] = tuple(range(0, 24 * 60, 180))

@@ -3,14 +3,21 @@
 from __future__ import annotations
 
 import re
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from collections.abc import Iterable
+from dataclasses import replace
 
 from .models import (
     Departure,
+    Line,
     StationDirection,
     StationDirectionOption,
     StationSchedule,
+    normalize_line_label,
+)
+from .models import (
+    # Kept importable from here, where it was defined before.
+    direction_names_match as direction_names_match,
 )
 
 NON_SERVICE_SCHEDULE_KINDS: frozenset[str] = frozenset(
@@ -25,10 +32,7 @@ _VALIDITY_SUFFIX_RE = re.compile(
     r"\s+\((?:gültig|nicht gültig|nur gültig|vom)\b).*$",
 )
 _PARENTHETICAL_NOTE_RE = re.compile(r"\s*\([^)]*\)")
-_NON_WORD_RE = re.compile(r"[^\w\s]")
-_STATION_SUFFIX_TOKENS: frozenset[str] = frozenset(
-    {"bahnhof", "bf", "bhf", "hbf", "hauptbahnhof"}
-)
+_SPLITTING_TRANSPORT_TYPES: frozenset[str] = frozenset({"SBAHN", "BAHN"})
 
 
 def group_station_schedules(
@@ -98,15 +102,17 @@ def build_departure_direction_options(
     This is a fallback for stops that do not expose MVG's station schedule
     catalog metadata. When no live direction key exists, destinations are kept
     separate so unrelated directions on the same line do not collapse together.
+    Destinations are listed most frequent first, with the halves of split
+    trains counted as one destination such as "Flughafen München / Freising".
     """
 
     grouped: dict[tuple[str, str, str | None, str | None], list[Departure]] = {}
-    for departure in departures:
+    for departure in merge_split_departures(departures):
         direction_key = departure.direction_key
         destination_key = None if direction_key is not None else departure.destination
         key = (
             departure.line.transport_type,
-            departure.line.label,
+            normalize_line_label(departure.line.label),
             direction_key,
             destination_key,
         )
@@ -115,13 +121,13 @@ def build_departure_direction_options(
     return [
         _build_departure_direction_option(
             schedule_kind,
-            line_label,
+            group_departures[0].line.label,
             direction_key,
             group_departures,
         )
         for (
             schedule_kind,
-            line_label,
+            _,
             direction_key,
             _,
         ), group_departures in sorted(
@@ -136,6 +142,24 @@ def build_departure_direction_options(
     ]
 
 
+def build_line_direction_option(line: Line) -> StationDirectionOption:
+    """Build one option for every direction of a line.
+
+    Used for lines a station serves that have neither catalog schedules nor
+    sampled departures, such as lines that only run on some days.
+    """
+
+    return StationDirectionOption(
+        id=f"{line.transport_type}:{line.label}:",
+        schedule_kind=line.transport_type,
+        line_label=line.label,
+        direction_key=None,
+        directions=(),
+        raw_directions=(),
+        schedule_codes=(),
+    )
+
+
 def select_departures(
     departures: Iterable[Departure],
     options: Iterable[StationDirectionOption],
@@ -144,12 +168,13 @@ def select_departures(
 ) -> list[Departure]:
     """Return departures on any of the given options, soonest first.
 
-    An empty set of options selects every departure.
+    An empty set of options selects every departure. Halves of a train that
+    splits further down the line are merged into one departure.
     """
 
     selected = tuple(options)
     return sorted(
-        (
+        merge_split_departures(
             departure
             for departure in departures
             if (include_cancelled or not departure.cancelled)
@@ -159,39 +184,43 @@ def select_departures(
     )
 
 
-def direction_names_match(name: str, other: str) -> bool:
-    """Return whether two spellings of a direction name the same place.
+def merge_split_departures(departures: Iterable[Departure]) -> list[Departure]:
+    """Merge the halves of trains that split further down the line.
 
-    Ignores case, punctuation and station suffixes such as "Bf." or "Hbf",
-    and accepts one name contained in the other, so "Giesing" matches
-    "Giesing Bf." and "Tierpark (Alemannenstr)" matches
-    "Tierpark (Alemannenstr.)".
+    MVG lists each half as its own departure, with the same line, direction,
+    platform and planned time but a different destination. The merged
+    departure names both in a stable order, as in "Flughafen München / Freising".
+    Only trains with a known platform are merged, since buses and the U-Bahn
+    do not split and can leave twice in the same minute.
     """
 
-    tokens = _direction_tokens(name)
-    other_tokens = _direction_tokens(other)
-    if not tokens or not other_tokens:
-        return False
-    return _contains_token_sequence(tokens, other_tokens) or _contains_token_sequence(
-        other_tokens, tokens
-    )
+    merged: dict[object, Departure] = {}
+    for departure in departures:
+        key: object = (
+            (
+                normalize_line_label(departure.line.label),
+                departure.direction_key,
+                departure.platform,
+                departure.planned_departure,
+                departure.cancelled,
+            )
+            if _may_split(departure)
+            else departure
+        )
+        first = merged.get(key)
+        if first is None:
+            merged[key] = departure
+        else:
+            destinations = {*first.destination.split(" / "), departure.destination}
+            merged[key] = replace(first, destination=" / ".join(sorted(destinations)))
+    return list(merged.values())
 
 
-def _direction_tokens(value: str) -> tuple[str, ...]:
-    normalized = _NON_WORD_RE.sub(" ", value.casefold())
-    return tuple(
-        token for token in normalized.split() if token not in _STATION_SUFFIX_TOKENS
-    )
-
-
-def _contains_token_sequence(
-    tokens: tuple[str, ...],
-    search_tokens: tuple[str, ...],
-) -> bool:
-    length = len(search_tokens)
-    return any(
-        tokens[index : index + length] == search_tokens
-        for index in range(len(tokens) - length + 1)
+def _may_split(departure: Departure) -> bool:
+    return (
+        departure.line.transport_type in _SPLITTING_TRANSPORT_TYPES
+        and departure.direction_key is not None
+        and departure.platform is not None
     )
 
 
@@ -199,6 +228,14 @@ def _build_direction_option(group: StationDirection) -> StationDirectionOption:
     directions = _unique(
         _display_direction(direction) for direction in group.directions
     )
+    # Temporary variants name the construction terminus and the regular one,
+    # as in "Sendlinger Tor / Fürstenried West", so the regular terminus is the
+    # first direction without one.
+    regular = next(
+        (direction for direction in directions if "/" not in direction), None
+    )
+    if regular is not None:
+        directions = (regular, *(d for d in directions if d != regular))
 
     return StationDirectionOption(
         id=_direction_option_id(group),
@@ -217,7 +254,12 @@ def _build_departure_direction_option(
     direction_key: str | None,
     departures: list[Departure],
 ) -> StationDirectionOption:
-    directions = _unique(departure.destination for departure in departures)
+    directions = tuple(
+        destination
+        for destination, _ in Counter(
+            departure.destination for departure in departures
+        ).most_common()
+    )
     suffix = direction_key or directions[0]
     return StationDirectionOption(
         id=f"{schedule_kind}:{line_label}:{suffix}",

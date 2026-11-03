@@ -1,18 +1,23 @@
 from __future__ import annotations
 
+import itertools
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from munich_transport.models import Departure, Line, StationSchedule
 from munich_transport.parser import parse_station_schedules
 from munich_transport.schedules import (
     build_departure_direction_options,
+    build_line_direction_option,
     build_station_direction_options,
     group_station_schedules,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
+# Departures without explicit minutes leave at distinct times, so none of them
+# look like the halves of one split train.
+_DISTINCT_MINUTES = itertools.count(1000)
 
 
 def load_fixture(name: str) -> object:
@@ -179,6 +184,85 @@ def test_build_departure_direction_options_groups_by_live_direction_key() -> Non
     assert options[0].schedule_codes == ()
 
 
+def test_build_departure_direction_options_orders_destinations_by_frequency() -> None:
+    departures = [
+        _departure("S4", "SBAHN", "H", "Ostbahnhof"),
+        _departure("S4", "SBAHN", "H", "Zorneding"),
+        _departure("S4", "SBAHN", "H", "Haar"),
+        _departure("S4", "SBAHN", "H", "Zorneding"),
+    ]
+
+    (option,) = build_departure_direction_options(departures)
+
+    assert option.directions == ("Zorneding", "Ostbahnhof", "Haar")
+    assert option.normal_terminus == "Zorneding"
+
+
+def test_build_departure_direction_options_ignores_spaces_in_labels() -> None:
+    departures = [
+        _departure("RE 9", "BAHN", "R", "Ulm Hauptbahnhof"),
+        _departure("RE9", "BAHN", "R", "Ulm Hauptbahnhof"),
+    ]
+
+    assert [option.id for option in build_departure_direction_options(departures)] == [
+        "BAHN:RE 9:R"
+    ]
+
+
+def test_build_departure_direction_options_names_split_trains_together() -> None:
+    departures = [
+        _departure("S1", "SBAHN", "R", "Freising", minutes=0),
+        _departure("S1", "SBAHN", "R", "Flughafen München", minutes=0),
+        _departure("S1", "SBAHN", "R", "Flughafen München", minutes=20),
+        _departure("S1", "SBAHN", "R", "Freising", minutes=20),
+        _departure("S1", "SBAHN", "R", "Flughafen München", minutes=40),
+    ]
+
+    (option,) = build_departure_direction_options(departures)
+
+    assert option.directions == ("Flughafen München / Freising", "Flughafen München")
+    assert option.normal_terminus == "Flughafen München / Freising"
+
+
+def test_build_station_direction_options_puts_regular_terminus_first() -> None:
+    schedules = [
+        StationSchedule(
+            schedule_kind="SUBWAY",
+            line_label="U3",
+            direction="Sendlinger Tor / Fürstenried West (gültig vom 18.05.)",
+            pdf_url="https://www.mvg.de/aushangfahrplan/U3_I_BP_52.pdf",
+            schedule_code="I",
+            direction_key="H",
+        ),
+        StationSchedule(
+            schedule_kind="SUBWAY",
+            line_label="U3",
+            direction="Fürstenried West, gültig ab 14.12.2025",
+            pdf_url="https://www.mvg.de/aushangfahrplan/U3_H_BP_52.pdf",
+            schedule_code="H",
+            direction_key="H",
+        ),
+    ]
+
+    (option,) = build_station_direction_options(schedules)
+
+    assert option.directions == (
+        "Fürstenried West",
+        "Sendlinger Tor / Fürstenried West",
+    )
+    assert option.normal_terminus == "Fürstenried West"
+
+
+def test_build_line_direction_option_covers_every_direction() -> None:
+    option = build_line_direction_option(Line(label="S7", transport_type="SBAHN"))
+
+    assert option.id == "SBAHN:S7:"
+    assert option.direction_key is None
+    assert option.directions == ()
+    assert option.matches(_departure("S7", "SBAHN", "H", "Kreuzstraße"))
+    assert option.matches(_departure("S7", "SBAHN", "R", "Wolfratshausen"))
+
+
 def test_build_departure_direction_options_keeps_unkeyed_destinations() -> None:
     departures = [
         _departure("N40", "NIGHT_LINE", None, "Klinikum Großhadern"),
@@ -286,8 +370,12 @@ def _departure(
     transport_type: str,
     direction_key: str | None,
     destination: str,
+    *,
+    minutes: int | None = None,
 ) -> Departure:
-    timestamp = datetime(2026, 5, 21, 12, 0, tzinfo=UTC)
+    timestamp = datetime(2026, 5, 21, 12, 0, tzinfo=UTC) + timedelta(
+        minutes=next(_DISTINCT_MINUTES) if minutes is None else minutes
+    )
     return Departure(
         planned_departure=timestamp,
         realtime_departure=timestamp,
@@ -296,4 +384,5 @@ def _departure(
         realtime=True,
         cancelled=False,
         direction_key=direction_key,
+        platform=1,
     )

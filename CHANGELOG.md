@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/g4bri3lDev/munich-transport/compare/v0.2.0...v0.3.0) (2026-11-03)
+
+
+### Features
+
+* offer lines and directions missing from MVG's schedule catalog ([b44ff9b](https://github.com/g4bri3lDev/munich-transport/commit/b44ff9b917e53135d9f38d59e72e073365ad0c9e))
+
 ## [0.2.0](https://github.com/g4bri3lDev/munich-transport/compare/v0.1.1...v0.2.0) (2026-10-19)
 
 
